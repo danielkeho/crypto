@@ -51,7 +51,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVarP(&algorithm, "algo", "a", "", "algorithm (default is rsa)")
-	rootCmd.PersistentFlags().StringVarP(&cfgFilePath, "config", "c", "", "config file (default is cert.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFilePath, "config", "c", "", "config file (default is tls.yaml)")
 }
 
 func initConfig() {
@@ -64,7 +64,7 @@ func initConfig() {
 
 	// config cert
 	if cfgFilePath == "" {
-		cfgFilePath = "cert.yaml"
+		cfgFilePath = "tls.yaml"
 	}
 	cfgFileBytes, err := os.ReadFile(cfgFilePath)
 	if err != nil {

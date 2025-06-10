@@ -1,0 +1,29 @@
+caCert:
+  serial: 1
+  validForYears: 10
+  subject:
+    country: US
+    organization: Company Org
+    organizationalUnit: Certificate Management
+    locality: NY
+    commonName: CA Certificate
+certs:
+  company.localtest.me:
+    serial: 1001
+    validForYears: 1
+    dnsNames: ["company.localtest.me", "company-2.localtest.me"]
+    subject:
+      country: US
+      organization: Company Org
+      organizationalUnit: Company department
+      locality: NY
+      commonName: company.localtest.me
+  company-client.localtest.me:
+    serial: 1002
+    validForYears: 1
+    subject:
+      country: US
+      organization: Company Org
+      organizationalUnit: Company department
+      locality: NY
+      commonName: company-client.localtest.me
