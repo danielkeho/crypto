@@ -9,6 +9,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type ED25519Algo struct{}
+
 func (c ED25519Algo) GenerateKeys() ([]byte, []byte, error) {
 
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)

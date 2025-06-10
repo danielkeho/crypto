@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type RSAAlgo struct{}
+
 func CreateRSAPrivateKey(n int) (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, n)
 }

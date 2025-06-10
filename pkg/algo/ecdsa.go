@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type ECDSAAlgo struct{}
+
 func (c ECDSAAlgo) GenerateKeys() ([]byte, []byte, error) {
 	// Generate ECDSA private key using P-256 curve
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

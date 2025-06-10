@@ -60,6 +60,7 @@ func initConfig() {
 	if algorithm == "" {
 		algorithm = "rsa"
 	}
+
 	certPool = cert.NewCertPool(algorithm)
 
 	// config cert
