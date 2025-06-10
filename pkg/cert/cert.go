@@ -13,7 +13,6 @@ func NewCertPool(algorithm string) CertPool {
 			Algo: algo.ED25519Algo{},
 		}
 	case "ecdsa":
-		println(1)
 		return CertPool{
 			Algo: algo.ECDSAAlgo{},
 		}

@@ -57,8 +57,8 @@ func (c RSAAlgo) GenerateKeys() ([]byte, []byte, error) {
 	return pem.EncodeToMemory(privateKeyPEM), ssh.MarshalAuthorizedKey(pubKey), nil
 }
 
-func (c RSAAlgo) CreatePrivateKeyAndSave(path string, n int) error {
-	privateKey, err := CreateRSAPrivateKey(n)
+func (c RSAAlgo) CreatePrivateKeyAndSave(path string) error {
+	privateKey, err := CreateRSAPrivateKey(4096)
 	if err != nil {
 		return err
 	}

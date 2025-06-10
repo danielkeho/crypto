@@ -20,7 +20,7 @@ var keyCreateCmd = &cobra.Command{
 	Short: "key commands",
 	Long:  `commands to create keys`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := certPool.Algo.CreatePrivateKeyAndSave(keyOut, keyLength)
+		err := certPool.Algo.CreatePrivateKeyAndSave(keyOut)
 		if err != nil {
 			fmt.Printf("Create key error: %s\n", err)
 			return
