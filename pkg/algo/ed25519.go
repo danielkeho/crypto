@@ -1,6 +1,7 @@
 package algo
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/x509"
@@ -13,7 +14,6 @@ import (
 
 type ED25519Algo struct{}
 
-// CreateEd25519PrivateKey generates a new Ed25519 private key.
 func CreateEd25519PrivateKey() (ed25519.PrivateKey, error) {
 	_, priv, err := ed25519.GenerateKey(rand.Reader)
 	return priv, err
@@ -80,35 +80,73 @@ func (c ED25519Algo) GenerateKeys() ([]byte, []byte, error) {
 }
 
 func (c ED25519Algo) CreatePrivateKeyAndSave(path string) error {
-	// Generate Ed25519 key pair
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return err
 	}
 
-	// Marshal private key to PKCS#8 DER format
 	der, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
 		return err
 	}
 
-	// Create PEM block with type "PRIVATE KEY"
 	pemBlock := &pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: der,
 	}
 
-	// Open file with secure permissions
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	// Encode PEM block to file
 	if err := pem.Encode(f, pemBlock); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c ED25519Algo) PrivateKeyPemToAlgo(input []byte) (interface{}, error) {
+	return PrivateKeyPemToEd25519(input)
+}
+
+func (c ED25519Algo) CreateCert(template *x509.Certificate, caKey interface{}, caCert *x509.Certificate) ([]byte, []byte, error) {
+	var (
+		derBytes []byte
+		certOut  bytes.Buffer
+		keyOut   bytes.Buffer
+	)
+
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, nil, err
+	}
+	if template.IsCA {
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, template, publicKey, privateKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		caKey = caKey.(*ed25519.PrivateKey)
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, caCert, publicKey, caKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if err = pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return nil, nil, err
+	}
+
+	pemBlock, err := Ed25519PrivateKeyToPEM(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err = pem.Encode(&keyOut, pemBlock); err != nil {
+		return nil, nil, err
+	}
+
+	return keyOut.Bytes(), certOut.Bytes(), nil
 }

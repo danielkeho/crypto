@@ -1,6 +1,7 @@
 package algo
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -48,7 +49,6 @@ func PrivateKeyPemToECDSA(input []byte) (*ecdsa.PrivateKey, error) {
 }
 
 func (c ECDSAAlgo) GenerateKeys() ([]byte, []byte, error) {
-	// Generate ECDSA private key using P-256 curve
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, err
@@ -74,7 +74,6 @@ func (c ECDSAAlgo) GenerateKeys() ([]byte, []byte, error) {
 	return privateKeyPEM, publicKeySSH, nil
 }
 
-// CreatePrivateKeyAndSave generates an ECDSA private key and saves it to the given path.
 func (c ECDSAAlgo) CreatePrivateKeyAndSave(path string) error {
 	privateKey, err := CreateECDSAPrivateKey(elliptic.P256())
 	if err != nil {
@@ -97,4 +96,48 @@ func (c ECDSAAlgo) CreatePrivateKeyAndSave(path string) error {
 	}
 
 	return nil
+}
+
+func (c ECDSAAlgo) PrivateKeyPemToAlgo(input []byte) (interface{}, error) {
+	return PrivateKeyPemToECDSA(input)
+}
+
+func (c ECDSAAlgo) CreateCert(template *x509.Certificate, caKey interface{}, caCert *x509.Certificate) ([]byte, []byte, error) {
+
+	var (
+		derBytes []byte
+		certOut  bytes.Buffer
+		keyOut   bytes.Buffer
+	)
+
+	privateKey, err := CreateECDSAPrivateKey(elliptic.P256())
+	if err != nil {
+		return nil, nil, err
+	}
+	if template.IsCA {
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		caKey = caKey.(*ecdsa.PrivateKey)
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, caCert, &privateKey.PublicKey, caKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if err = pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return nil, nil, err
+	}
+
+	pemBlock, err := ECDSAPrivateKeyToPEM(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err = pem.Encode(&keyOut, pemBlock); err != nil {
+		return nil, nil, err
+	}
+
+	return keyOut.Bytes(), certOut.Bytes(), nil
 }

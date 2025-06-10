@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/danielkeho/crypto/pkg/cert"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +43,7 @@ var certCreateCmd = &cobra.Command{
 			fmt.Printf("Could not find certificate name in config\n")
 			return
 		}
-		err = cert.CreateCert(certConfig, caKeyBytes, caCertBytes, certKeyPath, certPath)
+		err = certPool.CreateCert(certConfig, caKeyBytes, caCertBytes, certKeyPath, certPath)
 		if err != nil {
 			fmt.Printf("Create cert error: %s\n", err)
 			return

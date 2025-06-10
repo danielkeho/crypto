@@ -1,6 +1,7 @@
 package algo
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -73,4 +74,42 @@ func (c RSAAlgo) CreatePrivateKeyAndSave(path string) error {
 		return err
 	}
 	return nil
+}
+
+func (c RSAAlgo) PrivateKeyPemToAlgo(input []byte) (interface{}, error) {
+	return PrivateKeyPemToRSA(input)
+}
+
+func (c RSAAlgo) CreateCert(template *x509.Certificate, caKey interface{}, caCert *x509.Certificate) ([]byte, []byte, error) {
+	var (
+		derBytes []byte
+		certOut  bytes.Buffer
+		keyOut   bytes.Buffer
+	)
+
+	privateKey, err := CreateRSAPrivateKey(4096)
+	if err != nil {
+		return nil, nil, err
+	}
+	if template.IsCA {
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		caKey = caKey.(*rsa.PrivateKey)
+		derBytes, err = x509.CreateCertificate(rand.Reader, template, caCert, &privateKey.PublicKey, caKey)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if err = pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return nil, nil, err
+	}
+	if err = pem.Encode(&keyOut, RSAPrivateKeyToPEM(privateKey)); err != nil {
+		return nil, nil, err
+	}
+
+	return keyOut.Bytes(), certOut.Bytes(), nil
 }

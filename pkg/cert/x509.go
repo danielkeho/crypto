@@ -1,19 +1,13 @@
 package cert
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/pem"
 	"os"
 	"time"
-
-	"github.com/danielkeho/crypto/pkg/algo"
 )
 
-func CreateCACert(ca *CACert, keyFilePath, caCertFilePath string) error {
+func (pool *CertPool) CreateCACert(ca *CACert, keyFilePath, caCertFilePath string) error {
 	template := &x509.Certificate{
 		SerialNumber: ca.Serial,
 		Subject: pkix.Name{
@@ -34,7 +28,7 @@ func CreateCACert(ca *CACert, keyFilePath, caCertFilePath string) error {
 		BasicConstraintsValid: true,
 	}
 
-	keyBytes, certBytes, err := createCert(template, nil, nil)
+	keyBytes, certBytes, err := pool.Algo.CreateCert(template, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -49,7 +43,7 @@ func CreateCACert(ca *CACert, keyFilePath, caCertFilePath string) error {
 	return nil
 }
 
-func CreateCert(cert *Cert, caKey []byte, caCert []byte, keyFilePath, certFilePath string) error {
+func (pool *CertPool) CreateCert(cert *Cert, caKey []byte, caCert []byte, keyFilePath, certFilePath string) error {
 	template := &x509.Certificate{
 		SerialNumber: cert.Serial,
 		Subject: pkix.Name{
@@ -69,7 +63,7 @@ func CreateCert(cert *Cert, caKey []byte, caCert []byte, keyFilePath, certFilePa
 		DNSNames:    removeEmptyString(cert.DNSNames),
 	}
 
-	caKeyParsed, err := algo.PrivateKeyPemToRSA(caKey)
+	caKeyParsed, err := pool.Algo.PrivateKeyPemToAlgo(caKey)
 	if err != nil {
 		return err
 	}
@@ -78,7 +72,7 @@ func CreateCert(cert *Cert, caKey []byte, caCert []byte, keyFilePath, certFilePa
 		return err
 	}
 
-	keyBytes, certBytes, err := createCert(template, caKeyParsed, caCertParsed)
+	keyBytes, certBytes, err := pool.Algo.CreateCert(template, caKeyParsed, caCertParsed)
 	if err != nil {
 		return err
 	}
@@ -91,39 +85,6 @@ func CreateCert(cert *Cert, caKey []byte, caCert []byte, keyFilePath, certFilePa
 	}
 
 	return nil
-}
-
-func createCert(template *x509.Certificate, caKey *rsa.PrivateKey, caCert *x509.Certificate) ([]byte, []byte, error) {
-	var (
-		derBytes []byte
-		certOut  bytes.Buffer
-		keyOut   bytes.Buffer
-	)
-
-	privateKey, err := algo.CreateRSAPrivateKey(4096)
-	if err != nil {
-		return nil, nil, err
-	}
-	if template.IsCA {
-		derBytes, err = x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
-		if err != nil {
-			return nil, nil, err
-		}
-	} else {
-		derBytes, err = x509.CreateCertificate(rand.Reader, template, caCert, &privateKey.PublicKey, caKey)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	if err = pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return nil, nil, err
-	}
-	if err = pem.Encode(&keyOut, algo.RSAPrivateKeyToPEM(privateKey)); err != nil {
-		return nil, nil, err
-	}
-
-	return keyOut.Bytes(), certOut.Bytes(), nil
 }
 
 func removeEmptyString(input []string) []string {

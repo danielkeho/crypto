@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/danielkeho/crypto/pkg/cert"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +20,7 @@ var caCreateCmd = &cobra.Command{
 	Short: "ca commands",
 	Long:  `commands to create the CA`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := cert.CreateCACert(config.CACert, caKey, caCert)
+		err := certPool.CreateCACert(config.CACert, caKey, caCert)
 		if err != nil {
 			fmt.Printf("Create CA error: %s\n", err)
 			return
