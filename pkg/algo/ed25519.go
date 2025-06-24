@@ -129,7 +129,7 @@ func (c ED25519Algo) CreateCert(template *x509.Certificate, caKey interface{}, c
 			return nil, nil, err
 		}
 	} else {
-		caKey = caKey.(*ed25519.PrivateKey)
+		caKey = caKey.(ed25519.PrivateKey)
 		derBytes, err = x509.CreateCertificate(rand.Reader, template, caCert, publicKey, caKey)
 		if err != nil {
 			return nil, nil, err

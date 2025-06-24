@@ -2,5 +2,5 @@
 /*.pem
 /*.crt
 /*.key
-/tls.yaml
+tls.yaml
 /bin/*
